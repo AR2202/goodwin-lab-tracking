@@ -41,13 +41,20 @@ meany_c = num2cell(meany);
 %determine number of rows and columns of chambers
 centroid = sortrows(calib.centroids, 1);
 numchambers = size(centroid, 1);
-uniquecentroids = unique(centroid(:, 1));
-numrows = size(uniquecentroids, 1);
+diff_y_centroid = diff(centroid(:, 1));
+av_increase_y = mean(diff_y_centroid);
+y_jumps = find(diff_y_centroid > av_increase_y);
+numrows = size(y_jumps, 1) + 1;
+newrow_starts = 1 + [0; y_jumps; numchambers];
+
+
 numcolumns = ceil(numchambers/numrows);
 %sort the chambers by row first, then within the row sort by column
-for c = 1:size(uniquecentroids)
-    ychamber = uniquecentroids(c);
-    centroid(centroid(:, 1) == ychamber, :) = sortrows(centroid(centroid(:, 1) == ychamber, :), 2);
+for c = 1:numrows
+    first_in_row = newrow_starts(c);
+    last_in_row = newrow_starts(c+1) -1 ;
+    
+    centroid(first_in_row:last_in_row, :) = sortrows(centroid(first_in_row:last_in_row, :), 2);
 end
 
 
@@ -95,9 +102,9 @@ occupied_chambers = unique(chambers);
 nums = [1:nflies * nchambers];
 individuals = transpose(reshape(nums, [nflies, nchambers]));
 for i = 1:numel(occupied_chambers)
-
+    
     id_new(chambers == occupied_chambers(i)) = individuals(occupied_chambers(i), :);
-
+    
 end
 end
 
@@ -110,7 +117,7 @@ for i = 1:numchambs
     firstxi = firstx(chambers == i);
     if numel(firstxi) == 2
         if firstxi(1) < firstxi(2)
-
+            
             startpos{(size(startpos, 1) + 1), 1} = {'l'};
             startpos{(size(startpos, 1) + 1), 1} = {'r'};
         else
@@ -120,6 +127,6 @@ for i = 1:numchambs
     elseif numel(firstxi) == 1
         startpos{(size(startpos, 1) + 1), 1} = {'l'};
     end
-
+    
 end
 end
